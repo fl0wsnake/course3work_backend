@@ -59,6 +59,15 @@ config :logger, level: :info
 #     config :course3, Course3Web.Endpoint, server: true
 #
 
+config :course3,
+  ecto_repos: [Course3.Repo],
+  spotify_client_id: System.get_env("SPOTIFY_CLIENT_ID"),
+  spotify_client_secret: System.get_env("SPOTIFY_CLIENT_SECRET")
+
+config :course3, Course3.Guardian,
+  issuer: "course3_app", 
+  secret_key: System.get_env("TOKEN_SECRET")
+
 # Finally import the config/prod.secret.exs
 # which should be versioned separately.
 import_config "prod.secret.exs"

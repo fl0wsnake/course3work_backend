@@ -40,7 +40,13 @@ defmodule Course3.Mixfile do
       {:phoenix_html, "~> 2.10"},
       {:phoenix_live_reload, "~> 1.0", only: :dev},
       {:gettext, "~> 0.11"},
-      {:cowboy, "~> 1.0"}
+      {:cowboy, "~> 1.0"},
+      {:guardian, "~> 1.0-beta"},
+      {:comeonin, "~> 4.0"},
+      {:argon2_elixir, "~> 1.2"},
+      {:mix_test_watch, "~> 0.5", only: :dev, runtime: false},
+      {:httpoison, "~> 0.13"},
+      {:poison, "~> 3.1"}
     ]
   end
 

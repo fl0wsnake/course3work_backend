@@ -9,11 +9,19 @@ config :course3, Course3Web.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warn
 
-# Configure your database
 config :course3, Course3.Repo,
+  pool: Ecto.Adapters.SQL.Sandbox,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
-  password: "postgres",
-  database: "course3_test",
+  password: "pass1234",
+  database: "db",
   hostname: "localhost",
-  pool: Ecto.Adapters.SQL.Sandbox
+  pool_size: 10
+
+config :course3, Course3.Guardian,
+       issuer: "course3_app",
+       secret_key: "fZDwdWzrIyN/R5FvRUVvajUyrcTjc+HeUXwCPZlh95AqY6ftoP7hg9/sztzD3jqu"
+
+config :argon2_elixir,
+  t_cost: 1,
+  m_cost: 8

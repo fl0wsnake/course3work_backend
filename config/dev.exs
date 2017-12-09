@@ -47,11 +47,18 @@ config :logger, :console, format: "[$level] $message\n"
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
 
-# Configure your database
+config :course3,
+  spotify_client_id: "f3f6234781d349eda404adbc5a4407fb",
+  spotify_client_secret: "c8a10c6605c148ea9b6963a9215cc69e"
+
+config :course3, Course3.Guardian,
+  issuer: "course3_app", 
+  secret_key: "fZDwdWzrIyN/R5FvRUVvajUyrcTjc+HeUXwCPZlh95AqY6ftoP7hg9/sztzD3jqu"
+
 config :course3, Course3.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
-  password: "postgres",
-  database: "course3_dev",
+  password: "pass1234",
+  database: "db",
   hostname: "localhost",
   pool_size: 10

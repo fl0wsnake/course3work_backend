@@ -5,9 +5,18 @@
 # is restricted to this project.
 use Mix.Config
 
+config :course3, Course3.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  database: "course3_repo",
+  username: "user",
+  password: "pass",
+  hostname: "localhost"
+
+
 # General application configuration
 config :course3,
   ecto_repos: [Course3.Repo]
+
 
 # Configures the endpoint
 config :course3, Course3Web.Endpoint,
@@ -21,6 +30,10 @@ config :course3, Course3Web.Endpoint,
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
+
+config :argon2_elixir,
+  t_cost: 1,
+  m_cost: 8
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

@@ -1,26 +1,28 @@
 defmodule Course3Web.Router do
   use Course3Web, :router
 
-  pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_flash
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
-  end
-
   pipeline :api do
     plug :accepts, ["json"]
   end
 
-  scope "/", Course3Web do
-    pipe_through :browser # Use the default browser stack
-
-    get "/", PageController, :index
+  pipeline :api_protected do
+    plug Guardian.Plug.Pipeline, 
+      module: Course3.Guardian, 
+      error_handler: Course3.AuthErrorHandler
+    plug Guardian.Plug.VerifyHeader, key: :impersonate
+    plug :accepts, ["json"]
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", Course3Web do
-  #   pipe_through :api
-  # end
+  scope "/", Course3Web do
+    pipe_through :api
+    post "/register", AuthController, :register
+    post "/login", AuthController, :login
+  end
+
+  scope "/", Course3Web do
+    pipe_through :api_protected
+    get "/directory", ApiController, :directory
+    get "/get-access-token", ApiController, :exchange_authorization_code_for_refresh_and_access_tokens
+    get "/create-room/:name", ApiController, :create_room
+  end
 end
