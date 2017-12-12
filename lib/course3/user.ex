@@ -17,23 +17,19 @@ defmodule Course3.User do
     timestamps()
   end
 
-  def token_changeset(user, attrs) do
-    attrs = 
-      attrs
-      |> Map.put(:id, attrs.userid)
-      |> Map.take(~w(id username email spotify_credentials))
-
-    user
-    # |> cast(attrs, ~w(userid username email spotify_credentials)a)
-
-    # |> cast(attrs, ~w(userid username email))
-    # |> put_assoc(:spotify_credentials, attrs["spotify_credentials"])
-
-    |> cast(attrs, ~w(userid username email spotify_credentials))
-
-    # |> change(%{id: attrs["userid"]})
-    # |> cast(~w(id username email spotify_credentials)a)
-  end
+  # def token_changeset(user, attrs) do
+  #   attrs = 
+  #     attrs
+  #     |> Map.put(:id, attrs.userid)
+  #     |> Map.take(~w(id username email spotify_credentials))
+  #   user
+  #   # |> cast(attrs, ~w(userid username email spotify_credentials)a)
+  #   # |> cast(attrs, ~w(userid username email))
+  #   # |> put_assoc(:spotify_credentials, attrs["spotify_credentials"])
+  #   |> cast(attrs, ~w(userid username email spotify_credentials))
+  #   # |> change(%{id: attrs["userid"]})
+  #   # |> cast(~w(id username email spotify_credentials)a)
+  # end
 
   def register_changeset(user, attrs) do
     required = ~w(username email password)a

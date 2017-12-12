@@ -6,11 +6,12 @@ defmodule Course3Web.Router do
   end
 
   pipeline :api_protected do
+    plug :accepts, ["json"]
     plug Guardian.Plug.Pipeline, 
       module: Course3.Guardian, 
       error_handler: Course3.AuthErrorHandler
     plug Guardian.Plug.VerifyHeader, key: :impersonate
-    plug :accepts, ["json"]
+    plug Course3.Plugs.FetchSubject
   end
 
   scope "/", Course3Web do
