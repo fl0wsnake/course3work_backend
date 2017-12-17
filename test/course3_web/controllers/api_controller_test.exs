@@ -1,7 +1,6 @@
 defmodule Course3Web.ApiControllerTest do
   use Course3Web.ConnCase
-  alias Course3.Repo
-  alias Course3.User
+
   @user %{email: "test@test.test", username: "test", password: "qweqwe"}
 
   test "POST /register", %{conn: conn} do

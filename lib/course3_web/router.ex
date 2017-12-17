@@ -11,7 +11,7 @@ defmodule Course3Web.Router do
       module: Course3.Guardian, 
       error_handler: Course3.AuthErrorHandler
     plug Guardian.Plug.VerifyHeader, key: :impersonate
-    plug Course3.Plugs.FetchSubject
+    plug Course3.Plugs.FetchSpotifyCredentials
   end
 
   scope "/", Course3Web do
@@ -24,6 +24,9 @@ defmodule Course3Web.Router do
     pipe_through :api_protected
     get "/directory", ApiController, :directory
     get "/get-access-token", ApiController, :exchange_authorization_code_for_refresh_and_access_tokens
-    get "/create-room/:name", ApiController, :create_room
+    post "/room/create", ApiController, :create_room
+    get "/room/:id", ApiController, :room
+    put "/room/:room_id/invite/:user_id", ApiController, :invite
+    put "/room/:room_id/expel/:user_id", ApiController, :expel
   end
 end

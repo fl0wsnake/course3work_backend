@@ -4,35 +4,10 @@ defmodule Course3.Guardian do
   alias Course3.User
 
   def subject_for_token(resource, _claims) do
-    spotify_credentials = if spotify_credentials = Map.get(
-      resource,
-      :spotify_credentials
-    ) do
-      Map.take(
-        spotify_credentials,
-        [
-          :spotify_access_token,
-          :spotify_expires_in,
-          :inserted_at,
-          :spotify_refresh_token,
-          :spotify_user_id
-        ]
-      )
-    end
-    token = %{id: resource.id, spotify_credentials: spotify_credentials}
-    {:ok, token}
+    {:ok, resource.id}
   end
 
-  # def resource_from_claims(claims) do
-  #   {:ok, Rspotify_credentialso.get!(User, claims["sub"]["userid"])}
-  # end
-
-  def get_claims(conn) do
-    Guardian.Plug.current_claims(conn, key: :impersonate)
-  end
-
-  def get_resource!(conn) do
-    claims = Guardian.Plug.current_claims(conn, key: :impersonate)
-    Repo.get!(User, claims["sub"]["id"])
+  def resource_from_claims(claims) do
+    {:ok, Repo.get!(User, claims["sub"])}
   end
 end

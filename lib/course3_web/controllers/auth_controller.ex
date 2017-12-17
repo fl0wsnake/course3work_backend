@@ -2,12 +2,13 @@ defmodule Course3Web.AuthController do
   use Course3Web, :controller
   alias Course3.Repo
   alias Course3.User
-  alias Course3.SpotifyCredentials
   import Ecto.Query, only: [from: 2]
 
   def register(conn, _) do
-    user = User.register_changeset(%User{}, conn.body_params)
-    user = Repo.insert(user)
+    user = 
+      %User{}
+      |> User.register_changeset(conn.body_params)
+      |> Repo.insert()
 
     case user do
       {:ok, user} ->
@@ -25,7 +26,7 @@ defmodule Course3Web.AuthController do
 
   def login(conn, _) do
     %{"password" => password, "email" => email} = conn.body_params
-    [user] = Repo.all(from u in User, where: u.email == ^email, preload: :spotify_credentials)
+    user = Repo.one(from u in User, where: u.email == ^email, preload: :spotify_credentials)
     cond do
       user && Comeonin.Argon2.checkpw(password, user.password_hash) ->
         {:ok, token, _} = Course3.Guardian.encode_and_sign(user)
