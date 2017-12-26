@@ -17,7 +17,7 @@ defmodule Course3.User do
     many_to_many :invited_in, Room, join_through: "invitations"
     has_one :spotify_credentials, SpotifyCredentials
     has_many :owned_rooms, Room, foreign_key: :owner_id
-    has_many :likes, Like, foreign_key: :user_id
+    has_many :likes, Like
 
     timestamps()
   end
@@ -72,8 +72,11 @@ defmodule Course3.User do
     (
       from r in Room,
       where: r.id == ^room_id,
-      where: r.owner_id == ^room_id
+      where: r.owner_id == ^user_id
     ) |> Repo.one!()
   end
 
+  def show(user) do
+    Map.take user, ~w(username, id)a
+  end
 end

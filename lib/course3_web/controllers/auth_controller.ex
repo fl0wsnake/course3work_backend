@@ -4,6 +4,23 @@ defmodule Course3Web.AuthController do
   alias Course3.User
   import Ecto.Query, only: [from: 2]
 
+  def allow_cs conn, _params do 
+    conn 
+    |> Plug.Conn.put_resp_header(
+      "Access-Control-Allow-Origin",
+      "*"
+    ) 
+    |> Plug.Conn.put_resp_header(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PATCH, PUT, DELETE, OPTIONS"
+    )
+    |> Plug.Conn.put_resp_header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, X-Auth-Token, Content-Type, Accept, Authorization"
+    )
+    |> json(%{})
+  end
+
   def register(conn, _) do
     user = 
       %User{}
@@ -18,7 +35,7 @@ defmodule Course3Web.AuthController do
       {:error, changeset} ->
         conn
           |> put_status(400)
-          |> json(%{"error_message" =>
+          |> json(%{"error" =>
             changeset.errors
             |> Enum.map(fn {k, {v, _}} -> Atom.to_string(k) <> " " <> v end)})
     end

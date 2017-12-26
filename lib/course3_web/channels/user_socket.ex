@@ -2,7 +2,7 @@ defmodule Course3Web.UserSocket do
   use Phoenix.Socket
 
   channel "room:*", Course3Web.RoomChannel
-  channel "user:*", Course3Web.InvitationChannel
+  channel "user:*", Course3Web.UserChannel
 
   transport :websocket, Phoenix.Transports.WebSocket
 
@@ -17,6 +17,5 @@ defmodule Course3Web.UserSocket do
     end
   end
 
-  # def id(socket), do: "user_socket:#{socket.sub}"
   def id(socket), do: "user_socket:#{socket.assigns.user_id}"
 end

@@ -8,7 +8,7 @@ defmodule Course3.Invitation do
   schema "invitations" do
     belongs_to :user, User
     belongs_to :room, Room
-    field :is_master, :boolean, default: false
+    field :as_master, :boolean, default: false
 
     timestamps()
   end
@@ -25,4 +25,11 @@ defmodule Course3.Invitation do
       where: i.user_id == ^user_id,
       where: i.room_id == ^room_id
   end
+
+  # def target_user(invitation) do
+  #   invitation
+  #   |> assoc(:user)
+  #   |> Repo.one!()
+  # end
+
 end

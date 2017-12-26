@@ -6,12 +6,17 @@ defmodule Course3.Like do
   alias Course3.User
   alias Course3.Like
 
-  # @primary_key {:id, :string, []}
   schema "likes" do
-    belongs_to :rooms, Room
+    belongs_to :room, Room
     field :track_id, :string
-    belongs_to :users, User
+    belongs_to :user, User
     timestamps()
+  end
+
+  def changeset(like, attrs) do
+    like
+    |> cast(attrs, [:room_id, :track_id, :user_id])
+    |> validate_required([:room_id, :track_id, :user_id])
   end
 
   def track_rating(query) do

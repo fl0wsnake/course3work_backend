@@ -8,9 +8,9 @@ defmodule Course3.SpotifyCredentials do
   alias Course3.SpotifyCredentials
 
   schema "spotify_credentials" do
-    field :spotify_access_token, :string
-    field :spotify_expires_in, :string
-    field :spotify_refresh_token, :string
+    field :access_token, :string
+    field :expires_in, :integer
+    field :refresh_token, :string
     field :spotify_user_id, :string
     belongs_to :user, User
     timestamps()
@@ -30,34 +30,41 @@ defmodule Course3.SpotifyCredentials do
       from sc in SpotifyCredentials,
       join: r in Room,
       where: sc.user_id == r.owner_id,
+      where: r.id == ^room_id,
       select: "sc.*"
-    ) |> Repo.one!()
+    ) |> Repo.one()
+    if spotify_credentials, do: refresh spotify_credentials
+  end
 
-    refresh spotify_credentials
+  def for_user(user_id) do
+    spotify_credentials = (
+      from sc in SpotifyCredentials,
+      where: sc.user_id == ^user_id
+    ) |> Repo.one()
+    if spotify_credentials, do: refresh spotify_credentials
   end
 
   def refresh(credentials) do
     iat =
-      credentials["inserted_at"]
+      credentials.inserted_at
       |> DateTime.from_naive!("Etc/UTC")
       |> DateTime.to_unix()
-    is_actual = :os.system_time(:second) - iat >= credentials["spotify_expires_in"] - 10
-    credentials = if is_actual do
-      new_credentials = SpotifyAccounts.post! "/api/token",
+    is_expired = :os.system_time(:second) - iat >= credentials.expires_in - 10
+    if is_expired do
+      %{body: %{"access_token" => access_token, "expires_in" => expires_in}} = SpotifyAccounts.post! "/api/token",
       %{
         "grant_type" => "refresh_token",
-        "refresh_token" => credentials["refresh_token"]
+        "refresh_token" => credentials.refresh_token
       }
-      Map.merge(credentials, new_credentials)
+      credentials
+      |> IO.inspect()
+      |> change(%{
+        access_token: access_token,
+        expires_in: expires_in
+      })
+      |> Repo.update!()
     else
       credentials
     end
-    credentials
   end
-
-  # def changeset(spotify_credentials, attrs) do
-  #   spotify_credentials
-  #   |> cast(attrs, [:spotify_access_token, :spotify_expires_in, :spotify_refresh_token, :spotify_user_id])
-  # end
-
 end

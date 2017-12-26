@@ -15,17 +15,4 @@ defmodule Course3Web.ApiControllerTest do
     json = json_response conn, 200
     assert json["token"]
   end
-
-  test "GET /directory", %{conn: conn} do
-    conn = post conn, "/register", @user
-    json = json_response conn, 200
-    conn = conn 
-           |> recycle()
-           |> put_req_header("authorization", "Bearer " <> json["token"]) 
-           |> get("/directory")
-    json = json_response conn, 200
-    assert json["rooms_in"] == []
-    assert json["rooms"] == []
-  end
-
 end
