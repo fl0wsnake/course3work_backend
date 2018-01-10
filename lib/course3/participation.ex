@@ -5,9 +5,10 @@ defmodule Course3.Participation do
   alias Course3.User
   alias Course3.Room
 
-  schema "rooms_users" do
-    belongs_to :user, User
-    belongs_to :room, Room
+  @primary_key false
+  schema "users_rooms" do
+    belongs_to :user, User, primary_key: true
+    belongs_to :room, Room, type: :string, primary_key: true
     field :is_master, :boolean, default: false
 
     timestamps()

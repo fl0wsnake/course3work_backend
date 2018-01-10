@@ -1,0 +1,11 @@
+flask
+Flask-SQLAlchemy
+Flask-Migrate
+psycopg2
+flask-JWT-extended
+flask-cors
+sqlalchemy_utils
+interval
+cerberus
+pytz
+tzlocal

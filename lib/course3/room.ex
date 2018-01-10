@@ -5,14 +5,16 @@ defmodule Course3.Room do
   alias Course3.Room
   alias Course3.Repo
   alias Course3.User
-  alias Course3.Invitation
+  alias Course3.SavedRoom
 
+  @derive {Poison.Encoder, only: [:id, :name, :owner, :participants, :knocked_users]}
   @primary_key {:id, :string, []}
   schema "rooms" do
     field :name, :string
     belongs_to :owner, User
     many_to_many :participants, User, join_through: "users_rooms"
-    many_to_many :invited_users, User, join_through: "invitations"
+    many_to_many :knocked_users, User, join_through: "knocks"
+    many_to_many :saved_rooms, User, join_through: "saved_rooms"
     timestamps()
   end
 
@@ -32,10 +34,10 @@ defmodule Course3.Room do
       on: ur.user_id == ^user_id
   end
 
-  def invited_in(query, user_id) do
+  def saved(query, user_id) do
     from r in query,
-      join: i in Invitation,
-      on: i.user_id == ^user_id
+      join: s in SavedRoom,
+      on: s.user_id == ^user_id
   end
 
   def with_owner(query) do
@@ -88,10 +90,9 @@ defmodule Course3.Room do
       end)
   end
 
-  def get_rooms_invited_in(user_id) do
-    rooms_invited_in =
+  def get_saved_rooms(user_id) do
       Room
-      |> Room.invited_in(user_id)
+      |> Room.saved(user_id)
       |> Room.with_owner()
       |> Room.with_people_count()
       |> group_by([r, i, o, ur], o.id)
@@ -112,3 +113,42 @@ defmodule Course3.Room do
   end
 
 end
+
+# defimpl Poison.Encoder, for: Room do
+#   def encode(%{__struct__: _} = struct, options) do
+#     map = struct
+#           |> Map.from_struct
+#           |> sanitize_map
+#     Poison.Encoder.Map.encode(map, options)
+#   end
+#   defp sanitize_map(map) do
+#     IO.inspect map
+#     Map.take(map, [:id, :name])
+#     |> IO.inspect()
+#   end
+# end
+
+# defimpl Poison.Encoder, for: User do
+#   def encode(%{__struct__: _} = struct, options) do
+#     map = struct
+#           |> Map.from_struct
+#           |> sanitize_map
+#     Poison.Encoder.Map.encode(map, options)
+#   end
+#   defp sanitize_map(map) do
+#     Map.take(map, [:id, :username])
+#   end
+# end
+
+# defimpl Poison.Encoder, for: Any do
+#   def encode(%{__struct__: _} = struct, options) do
+#     map = struct
+#           |> Map.from_struct
+#           |> sanitize_map
+#     Poison.Encoder.Map.encode(map, options)
+#   end
+#   defp sanitize_map(map) do
+#     Map.drop(map, [:__meta__, :__struct__])
+#   end
+# end
+

@@ -1,7 +1,5 @@
 defmodule SpotifyApi do
   use HTTPoison.Base
-  alias Course3.Like
-  alias Course3.Repo
 
   # @expected_fields ~w(
   #   id
@@ -22,19 +20,7 @@ defmodule SpotifyApi do
     # |> Map.take(@expected_fields)
   end
 
-  def fetch_tracks(user_id, room_id, %{access_token: access_token}) do
-    %{body: %{"items" => items}} = SpotifyApi.get!("/v1/users/#{user_id}/playlists/#{room_id}/tracks", ["Authorization": "Bearer #{access_token}"])
-    Enum.map items, fn(item) -> 
-      track = item["track"] 
-      rating = 
-        Like
-        |> Like.for_track(track["id"], room_id)
-        |> Like.track_rating()
-        |> Repo.one!()
-      track
-      |> Map.take(~w(artists id images name)) 
-      |> Map.put("rating", rating)
-    end
+  def authorization(%{access_token: access_token}) do
+    ["Authorization": "Bearer #{access_token}"]
   end
-
 end

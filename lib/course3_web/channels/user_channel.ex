@@ -2,9 +2,11 @@ defmodule Course3Web.UserChannel do
   use Course3Web, :channel
   import Ecto.Query
   alias Course3.Room
+  alias Course3.Participation
   alias Course3.Repo
   alias Course3.SpotifyCredentials
   alias Course3Web.Endpoint
+  alias Course3.Knock
 
   def join("user:" <> user_id, _payload, socket) do
     {user_id, _} = Integer.parse user_id
@@ -20,14 +22,14 @@ defmodule Course3Web.UserChannel do
       %{
         "rooms" => Room.get_rooms(),
         "rooms_in" => Room.get_rooms_in(socket.assigns.user_id),
-        "rooms_invited_in" => Room.get_rooms_invited_in(socket.assigns.user_id),
+        "rooms_saved" => Room.get_saved_rooms(socket.assigns.user_id),
         "spotify_client_id" => Application.get_env(:course3, :spotify_client_id),
       }
     {:reply, {:ok, reply}, socket}
   end
 
-  def handle_in("create_room", %{"name" => room_name}, socket) do
-    spotify_credentials = SpotifyCredentials.for_user socket.assigns.user_id
+  def handle_in("create_room", %{"name" => room_name}, %{assigns: %{user_id: user_id}}) do
+    spotify_credentials = SpotifyCredentials.for_user user_id
     if spotify_credentials do
       %{body: %{"id" => room_id}} = SpotifyApi.post!(
         "/v1/users/#{spotify_credentials.spotify_user_id}/playlists",
@@ -45,16 +47,44 @@ defmodule Course3Web.UserChannel do
           owner_id: socket.assigns.user_id
         }
       )
-      |> IO.inspect()
       |> Repo.insert!()
+
+      Participation
+      |> struct(
+        %{
+          room_id: room_id,
+          user_id: socket.assigns.user_id,
+          is_master: false
+        }
+      )      
+      |>
+      Repo.insert!()
 
       broadcast! socket, "rooms", %{
         rooms: Room.get_rooms()
       }
-      {:noreply, socket}
+      {:reply, :ok, socket}
     else
       {:reply, {:error, %{reason: "no authenticated spotify account"}}, socket}
     end
+  end
+
+  def handle_in("knock", %{"room_id" => room_id}, %{assigns: %{user_id: user_id}} = socket) do
+      %Knock{}
+      |> changeset(
+        %{
+          user_id: user_id, 
+          room_id: room_id
+        }
+      )
+      |> Repo.insert!()
+
+    knocks = 
+      Knock
+      |> Knock.for_room(room_id)
+      |> Repo.all()
+
+    Endpoint.broadcast! "room:" <> room_id, "knocks", %{knocks: knocks}
   end
 
   def handle_in("auth_code_for_access_tokens", %{"code" => code, "redirect_uri" => redirect_uri}, socket) do

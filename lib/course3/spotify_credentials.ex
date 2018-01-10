@@ -30,8 +30,7 @@ defmodule Course3.SpotifyCredentials do
       from sc in SpotifyCredentials,
       join: r in Room,
       where: sc.user_id == r.owner_id,
-      where: r.id == ^room_id,
-      select: "sc.*"
+      where: r.id == ^room_id
     ) |> Repo.one()
     if spotify_credentials, do: refresh spotify_credentials
   end
@@ -57,7 +56,6 @@ defmodule Course3.SpotifyCredentials do
         "refresh_token" => credentials.refresh_token
       }
       credentials
-      |> IO.inspect()
       |> change(%{
         access_token: access_token,
         expires_in: expires_in

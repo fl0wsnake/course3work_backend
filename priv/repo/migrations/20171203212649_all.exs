@@ -23,9 +23,10 @@ defmodule Course3.Repo.Migrations.All do
     create unique_index(:rooms, [:name])
 
     create table(:users_rooms, primary_key: false) do
-      add :room_id, references(:rooms, on_delete: :delete_all, type: :string), primary_key: true
       add :user_id, references(:users, on_delete: :delete_all), primary_key: true
+      add :room_id, references(:rooms, on_delete: :delete_all, type: :string), primary_key: true
       add :is_master, :boolean, default: false
+      timestamps()
     end
 
     create table(:spotify_credentials) do
@@ -38,15 +39,15 @@ defmodule Course3.Repo.Migrations.All do
     end
 
     create table(:likes, primary_key: false) do
-      add :room_id, references(:rooms, on_delete: :delete_all, type: :string), primary_key: true
       add :track_id, :string, primary_key: true
+      add :room_id, references(:rooms, on_delete: :delete_all, type: :string), primary_key: true
       add :user_id, references(:users, on_delete: :delete_all), primary_key: true
+      timestamps()
     end
 
-    create table(:invitations, primary_key: false) do
-      add :room_id, references(:rooms, on_delete: :delete_all, type: :string), primary_key: true
+    create table(:knocks, primary_key: false) do
       add :user_id, references(:users, on_delete: :delete_all), primary_key: true
-      add :as_master, :boolean, default: false
+      add :room_id, references(:rooms, on_delete: :delete_all, type: :string), primary_key: true
       timestamps()
     end
 

@@ -4,22 +4,30 @@ defmodule Course3Web.AuthController do
   alias Course3.User
   import Ecto.Query, only: [from: 2]
 
-  def allow_cs conn, _params do 
-    conn 
-    |> Plug.Conn.put_resp_header(
-      "Access-Control-Allow-Origin",
-      "*"
-    ) 
-    |> Plug.Conn.put_resp_header(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PATCH, PUT, DELETE, OPTIONS"
-    )
-    |> Plug.Conn.put_resp_header(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, X-Auth-Token, Content-Type, Accept, Authorization"
-    )
-    |> json(%{})
-  end
+  # def allow_origin conn, _params do
+  #   conn
+  #   |> Plug.Conn.put_resp_header(
+  #     "Access-Control-Allow-Origin",
+  #     "*"
+  #   )
+  # end
+
+  # def allow_cs conn, _params do 
+  #   conn 
+  #   |> Plug.Conn.put_resp_header(
+  #     "Access-Control-Allow-Origin",
+  #     "*"
+  #   ) 
+  #   |> Plug.Conn.put_resp_header(
+  #     "Access-Control-Allow-Methods",
+  #     "GET, POST, PATCH, PUT, DELETE, OPTIONS"
+  #   )
+  #   |> Plug.Conn.put_resp_header(
+  #     "Access-Control-Allow-Headers",
+  #     "Origin, X-Requested-With, X-Auth-Token, Content-Type, Accept, Authorization"
+  #   )
+  #   |> json(%{})
+  # end
 
   def register(conn, _) do
     user = 
