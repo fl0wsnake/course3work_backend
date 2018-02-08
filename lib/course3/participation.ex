@@ -14,4 +14,11 @@ defmodule Course3.Participation do
     timestamps()
   end
 
+  def changeset(knock, attrs) do
+    knock
+    |> cast(attrs, [:user_id, :room_id])
+    |> assoc_constraint(:room)
+    |> assoc_constraint(:user)
+  end
+
 end

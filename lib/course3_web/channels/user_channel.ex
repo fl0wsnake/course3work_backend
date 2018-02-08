@@ -2,6 +2,7 @@ defmodule Course3Web.UserChannel do
   use Course3Web, :channel
   import Ecto.Query
   alias Course3.Room
+  alias Course3.User
   alias Course3.Participation
   alias Course3.Repo
   alias Course3.SpotifyCredentials
@@ -17,18 +18,17 @@ defmodule Course3Web.UserChannel do
     end
   end
 
-  def handle_in("directory", _, socket) do
+  def handle_in("directory", _, %{assigns: %{user_id: user_id}} = socket) do
     reply = 
       %{
-        "rooms" => Room.get_rooms(),
-        "rooms_in" => Room.get_rooms_in(socket.assigns.user_id),
-        "rooms_saved" => Room.get_saved_rooms(socket.assigns.user_id),
+        "rooms" => Room.get_rooms(user_id),
+        "rooms_in" => Room.get_rooms_in(user_id),
         "spotify_client_id" => Application.get_env(:course3, :spotify_client_id),
       }
     {:reply, {:ok, reply}, socket}
   end
 
-  def handle_in("create_room", %{"name" => room_name}, %{assigns: %{user_id: user_id}}) do
+  def handle_in("create_room", %{"name" => room_name}, %{assigns: %{user_id: user_id}} = socket) do
     spotify_credentials = SpotifyCredentials.for_user user_id
     if spotify_credentials do
       %{body: %{"id" => room_id}} = SpotifyApi.post!(
@@ -38,13 +38,12 @@ defmodule Course3Web.UserChannel do
           "Authorization": "Bearer #{spotify_credentials.access_token}"
         ]
       )
-      IO.inspect room_id
       %Room{}
       |> Room.changeset(
         %{
           id: room_id,
           name: room_name,
-          owner_id: socket.assigns.user_id
+          owner_id: user_id
         }
       )
       |> Repo.insert!()
@@ -57,12 +56,18 @@ defmodule Course3Web.UserChannel do
           is_master: false
         }
       )      
-      |>
-      Repo.insert!()
+      |> Repo.insert!()
 
-      broadcast! socket, "rooms", %{
-        rooms: Room.get_rooms()
-      }
+      broadcast!(
+        socket, 
+        "room_was_created", 
+        %{
+          room_name: room_name, 
+          state: %{
+            rooms: Room.get_rooms(user_id),
+          }
+        }
+      )
       {:reply, :ok, socket}
     else
       {:reply, {:error, %{reason: "no authenticated spotify account"}}, socket}
@@ -70,21 +75,27 @@ defmodule Course3Web.UserChannel do
   end
 
   def handle_in("knock", %{"room_id" => room_id}, %{assigns: %{user_id: user_id}} = socket) do
-      %Knock{}
-      |> changeset(
+    %Knock{}
+    |> Knock.changeset(
+      %{
+        user_id: user_id, 
+        room_id: room_id
+      }
+    )
+    |> Repo.insert!()
+
+    Endpoint.broadcast!(
+      "room:" <> room_id, 
+      "user_knocked", 
+      %{
+        user_id: user_id, 
+        state: 
         %{
-          user_id: user_id, 
-          room_id: room_id
+          knocked_users: User.users_knocked_in_room(room_id)
         }
-      )
-      |> Repo.insert!()
-
-    knocks = 
-      Knock
-      |> Knock.for_room(room_id)
-      |> Repo.all()
-
-    Endpoint.broadcast! "room:" <> room_id, "knocks", %{knocks: knocks}
+      }
+    )
+    {:reply, :ok, socket}
   end
 
   def handle_in("auth_code_for_access_tokens", %{"code" => code, "redirect_uri" => redirect_uri}, socket) do

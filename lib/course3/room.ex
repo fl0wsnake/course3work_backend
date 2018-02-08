@@ -5,7 +5,7 @@ defmodule Course3.Room do
   alias Course3.Room
   alias Course3.Repo
   alias Course3.User
-  alias Course3.SavedRoom
+  alias Course3.Knock
 
   @derive {Poison.Encoder, only: [:id, :name, :owner, :participants, :knocked_users]}
   @primary_key {:id, :string, []}
@@ -14,7 +14,6 @@ defmodule Course3.Room do
     belongs_to :owner, User
     many_to_many :participants, User, join_through: "users_rooms"
     many_to_many :knocked_users, User, join_through: "knocks"
-    many_to_many :saved_rooms, User, join_through: "saved_rooms"
     timestamps()
   end
 
@@ -34,15 +33,16 @@ defmodule Course3.Room do
       on: ur.user_id == ^user_id
   end
 
-  def saved(query, user_id) do
-    from r in query,
-      join: s in SavedRoom,
-      on: s.user_id == ^user_id
-  end
+  # def with_owner(query) do
+  #   from r in query,
+  #     left_join: o in User,
+  #     on: r.owner_id == o.id
+  # end
 
   def with_owner(query) do
     from r in query,
-      join: o in User,
+      left_join: o in User,
+      # preload: [owner: o]
       on: r.owner_id == o.id
   end
 
@@ -53,63 +53,78 @@ defmodule Course3.Room do
       group_by: r.id
   end
 
-  def get_rooms() do
+  # def if_knocked(query, user_id) do
+  #   from r in query,
+  #     left_join: k in Knock,
+  #     on: r.id == k.room_id,
+  #     where: k.user_id == ^user_id,
+  #     group_by: k.user_id
+  # end
+
+  def get_rooms(user_id) do
     Room
     |> Room.with_owner()
     |> Room.with_people_count()
     |> group_by([r, o, ur], o.id)
-    |> select([r, o, ur], {r.id, r.name, o.username, count("ur.*")})
+    |> select(
+      [r, o, ur], 
+      {
+        r.id, 
+        r.name, 
+        o.id,
+        o.username, 
+        count("ur.*"), 
+        fragment("(select case when exists (select from knocks where room_id = ? and user_id = ?) then true else false end)", r.id, ^user_id),
+        fragment("(select case when exists (select from users_rooms where room_id = ? and user_id = ? and is_master = true) then true else false end)", r.id, ^user_id)
+      })
     |> Repo.all()
     |> Enum.map(fn tuple -> 
-      {id, name, owner_name, users_count} = tuple
+      {id, name, owner_id, owner_name, users_count, knocked, is_master} = tuple
       %{
         id: id,
         name: name,
-        owner_name: owner_name,
-        users_count: users_count
+        owner: %{
+          id: owner_id,
+          username: owner_name
+        },
+        users_count: users_count,
+        knocked: knocked,
+        is_master: is_master
       }
     end)
   end
 
   def get_rooms_in(user_id) do
-      Room
-      |> Room.participating_in(user_id)
-      |> Room.with_owner()
-      |> Room.with_people_count()
-      |> group_by([r, _, o, ur], o.id)
-      |> select([r, _, o, ur], {r.id, r.name, o.username, count("ur.*")})
-      |> Repo.all()
-      |> Enum.map(fn tuple -> 
-        {id, name, owner_name, users_count} = tuple
-        %{
-          id: id,
-          name: name,
-          owner_name: owner_name,
-          users_count: users_count
-        }
-      end)
-  end
-
-  def get_saved_rooms(user_id) do
-      Room
-      |> Room.saved(user_id)
-      |> Room.with_owner()
-      |> Room.with_people_count()
-      |> group_by([r, i, o, ur], o.id)
-      |> group_by([r, i, o, ur], i.room_id)
-      |> group_by([r, i, o, ur], i.user_id)
-      |> select([r, i, o, ur], {r.id, r.name, o.username, count("ur.*"), i.as_master})
-      |> Repo.all()
-      |> Enum.map(fn tuple -> 
-        {id, name, owner_name, users_count, as_master} = tuple
-        %{
-          id: id,
-          name: name,
-          owner_name: owner_name,
-          users_count: users_count,
-          as_master: as_master
-        }
-      end)
+    Room
+    |> Room.participating_in(user_id)
+    |> Room.with_owner()
+    |> Room.with_people_count()
+    |> group_by([r, _, o, ur], o.id)
+    |> select(
+      [r, _, o, ur], 
+      {
+        r.id,
+        r.name,
+        o.id,
+        o.username,
+        count("ur.*"),
+        fragment("(select case when exists (select from users_rooms where room_id = ? and user_id = ? and is_master = true) then true else false end)", r.id, ^user_id)
+      }
+    )
+    |> Repo.all()
+    |> Enum.map(fn tuple -> 
+      {id, name, owner_id, owner_name, users_count, is_master} = tuple
+      %{
+        id: id,
+        name: name,
+        owner: %{
+          id: owner_id,
+          username: owner_name
+        },
+        users_count: users_count,
+        is_master: is_master
+      }
+    end)
   end
 
 end

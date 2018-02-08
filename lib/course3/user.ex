@@ -7,6 +7,7 @@ defmodule Course3.User do
   alias Course3.Room
   alias Course3.SpotifyCredentials
   alias Course3.Like
+  alias Course3.Knock
 
   @derive {Poison.Encoder, only: [:id, :username]}
   schema "users" do
@@ -15,7 +16,7 @@ defmodule Course3.User do
     field :password, :string, virtual: true
     field :password_hash, :string
     many_to_many :rooms_in, Room, join_through: "users_rooms"
-    many_to_many :saved_rooms, Room, join_through: "saved_rooms"
+    many_to_many :knocked_to_rooms, Room, join_through: "knocks"
     has_one :spotify_credentials, SpotifyCredentials
     has_many :owned_rooms, Room, foreign_key: :owner_id
     has_many :likes, Like
@@ -42,14 +43,8 @@ defmodule Course3.User do
 
   def from_room(query, room_id) do
     from u in query,
-      join: ur in "user_rooms",
+      join: ur in "users_rooms",
       where: ur.room_id == ^room_id
-  end
-
-  def knocked_in_room(query, room_id) do
-    from u in query,
-      join: i in "knocks",
-      where: i.room_id == ^room_id
   end
 
   def in_room?(user_id, room_id) do
@@ -79,8 +74,21 @@ defmodule Course3.User do
     ) |> Repo.one!()
   end
 
-  # def show(user) do
-  #   Map.take user, ~w(username, id)a
-  # end
+  def users_knocked_in_room(room_id) do
+    (
+      from u in User,
+      join: k in Knock,
+      where: u.id == k.user_id,
+      where: k.room_id == ^room_id
+    ) |> Repo.all()
+  end
+
+  def users_from_room(room_id) do
+    (
+      from u in User,
+      join: ur in "users_rooms",
+      where: ur.room_id == ^room_id
+    ) |> Repo.all()
+  end
 
 end

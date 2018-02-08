@@ -4,12 +4,13 @@ defmodule Course3.Knock do
   import Ecto.Query
   alias Course3.User
   alias Course3.Room
+  alias Course3.Knock
+  alias Course3.Repo
 
   @primary_key false
   schema "knocks" do
     belongs_to :user, User, primary_key: true
-    belongs_to :room, Room, primary_key: true
-
+    belongs_to :room, Room, type: :string, primary_key: true
     timestamps()
   end
 
@@ -20,15 +21,23 @@ defmodule Course3.Knock do
     |> assoc_constraint(:user)
   end
 
-  def for_room(query, room_id) do
-    from k in query,
-      where: room_id == ^room_id
+  def has_knocked(user_id, room_id) do
+    (
+      from k in Knock,
+      where: k.user_id == ^user_id,
+      where: k.room_id == ^room_id
+    ) |> Repo.one()
   end
 
   def by_user_and_room(query, user_id, room_id) do
-    from i in query,
-      where: i.user_id == ^user_id,
-      where: i.room_id == ^room_id
+    from k in query,
+      where: k.user_id == ^user_id,
+      where: k.room_id == ^room_id
+  end
+
+  def by_room(query, room_id) do
+    from k in query,
+      where: k.room_id == ^room_id
   end
 
 end
